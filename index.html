@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <title>Tarefas Simples</title>
+
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        outline: none;
+        border: none;
+        transition: 0.4s;
+      }
+      body {
+        background-color: #1b2025;
+        color: #e0dfd5;
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+        font-family: "Poppins", sans-serif;
+      }
+      header {
+        padding: 12px;
+        margin-bottom: 12px;
+        color: #f06543;
+      }
+      button {
+        cursor: pointer;
+      }
+
+      .content {
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        max-width: 70vw;
+      }
+
+      .function_group {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+
+      #task_input {
+        width: 500px;
+        background: #434649;
+        border: #f09d51 1px solid;
+        border-radius: 8px;
+        font-size: large;
+        padding: 6px;
+        color: white;
+      }
+      #task_input::placeholder {
+        color: #f09d51;
+      }
+
+      .add_task {
+        width: 40px;
+        height: 40px;
+        font-size: xx-large;
+        background: none;
+        color: #f09d51;
+      }
+
+      #tasks {
+        margin: auto 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 1000000000000000px;
+        max-width: 70vw;
+      }
+
+      .task {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        transition: 0.1s;
+      }
+      .task:hover {
+        cursor: grab;
+      }
+      .dragging {
+        padding: 0 10px;
+        border: 2px solid white;
+      }
+      .checked {
+        color: green;
+      }
+
+      .check {
+        background: none;
+        cursor: pointer;
+        appearance: none;
+        margin: 0;
+        font: inherit;
+        color: green;
+        width: 1.3em;
+        height: 1.3em;
+        border: 0.15em solid white;
+        border-radius: 0.15em;
+        display: grid;
+        place-content: center;
+      }
+      .check::-ms-check {
+        color: blue;
+        background-color: blue;
+      }
+      .check::before {
+        content: "";
+        width: 0.8em;
+        height: 0.8em;
+        transform: scale(0);
+        transition: 120ms transform ease-in-out;
+        box-shadow: inset 1em 1em var(--form-control-color);
+        background-color: green;
+      }
+      .check:checked::before {
+        transform: scale(1);
+      }
+
+      .delete {
+        font-size: 36px;
+        background: none;
+        color: #e8e9eb;
+      }
+      .delete:hover {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Gerenciador de Tarefas</h1>
+    </header>
+
+    <div class="content">
+      <form class="function_group">
+        <input
+          type="text"
+          id="task_input"
+          placeholder="Adicione uma nova tarefa"
+        />
+        <button class="add_task" onclick="newTask()" type="submit">+</button>
+      </form>
+
+      <div id="tasks">
+        <!-- <div class="task">
+          p - 1
+
+          <button class="check" type="checkbox"></button>
+
+          <p>teareafasd as</p>
+
+          <button class="delete">-</button>
+        </div> -->
+      </div>
+    </div>
+
+    <script>
+      let taskData = {};
+
+      document
+        .querySelector(".add_task")
+        .addEventListener("click", function (event) {
+          event.preventDefault();
+          const input = document.getElementById("task_input");
+          input.value = "";
+        });
+
+      function newTask() {
+        const taskInput = document.getElementById("task_input");
+        if (!taskInput.value) {
+          alert("Digite um valor!");
+          return;
+        }
+
+        const tasksDiv = document.getElementById("tasks");
+        const newTask = document.createElement("div");
+        newTask.classList.add("task");
+        newTask.setAttribute("draggable", "true");
+
+        // const taskItem = document.createElement("p");
+        // taskItem.innerText = String(tasksDiv.childElementCount + 1);
+
+        const taskText = document.createElement("p");
+        taskText.innerText = taskInput.value;
+
+        const taskCheckbox = document.createElement("input");
+        taskCheckbox.type = "checkbox";
+        taskCheckbox.classList.add("check");
+        taskCheckbox.setAttribute("onclick", "checkTask(this.parentElement)");
+
+        const deleteButton = document.createElement("button");
+        deleteButton.setAttribute("onclick", "deleteTask(this.parentElement)");
+        deleteButton.classList.add("delete");
+        deleteButton.innerText = "-";
+
+        // newTask.appendChild(taskItem);
+        newTask.appendChild(taskCheckbox);
+        newTask.appendChild(taskText);
+        newTask.appendChild(deleteButton);
+        newTask.addEventListener("dragend", handleDragEnd);
+        const taskId = Date.now().toString();
+        taskData[taskId] = {
+          position: tasksDiv.childElementCount, // valor inicial da posição
+          text: taskInput.value,
+          checked: false,
+        };
+        newTask.setAttribute("task_id", taskId);
+
+        tasksDiv.appendChild(newTask);
+
+        localStorage.setItem("taskData", JSON.stringify(taskData));
+        // console.log(localStorage.getItem("taskData"));
+      }
+
+      function deleteTask(task) {
+        task.remove();
+        delete taskData[task.attributes.task_id.value];
+
+        const tasks = document.querySelectorAll(".task");
+        const columnTasks = document.getElementById("tasks");
+
+        tasks.forEach((task) => {
+          const taskIdTasks = task.attributes.task_id.value;
+          const taskIndexTasks = [...columnTasks.children].indexOf(task);
+          // console.log(taskIdTasks);
+          // console.log(taskData);
+          taskData[taskIdTasks].position = taskIndexTasks;
+        });
+        localStorage.setItem("taskData", JSON.stringify(taskData));
+        // console.log(localStorage.getItem("taskData"));
+      }
+
+      function checkTask(task) {
+        const taskId = task.attributes.task_id.value;
+        const taskObject = taskData[taskId];
+        console.log(taskObject);
+
+        if (taskObject.checked) {
+          task.classList.remove("checked");
+          taskObject.checked = false;
+        } else {
+          task.classList.add("checked");
+          taskObject.checked = true;
+        }
+
+        console.log(taskData);
+        localStorage.setItem("taskData", JSON.stringify(taskData));
+        // console.log(localStorage.getItem("taskData"));
+      }
+
+      const columns = document.querySelectorAll("#tasks");
+
+      document.addEventListener("dragstart", (e) => {
+        e.target.classList.add("dragging");
+      });
+
+      document.addEventListener("dragend", (e) => {
+        console.log(taskData);
+        handleDragEnd(e);
+      });
+
+      columns.forEach((item) => {
+        item.addEventListener("dragover", (e) => {
+          const dragging = document.querySelector(".dragging");
+          const applyAfter = getNewPosition(item, e.clientY);
+
+          if (applyAfter) {
+            applyAfter.insertAdjacentElement("afterend", dragging);
+          } else {
+            item.prepend(dragging);
+          }
+        });
+      });
+
+      function getNewPosition(column, posY) {
+        const cards = column.querySelectorAll(".task:not(.dragging)");
+        let result;
+
+        for (let refer_card of cards) {
+          const box = refer_card.getBoundingClientRect();
+          const boxCenterY = box.y + box.height / 2;
+
+          if (posY >= boxCenterY) result = refer_card;
+        }
+
+        return result;
+      }
+
+      function handleDragEnd(e) {
+        const notDragging = document.querySelectorAll(".task:not(.dragging)");
+        const columnNotDragging = e.target.parentElement;
+
+        notDragging.forEach((notDraggingTask) => {
+          const taskIdNotDragging = notDraggingTask.attributes.task_id.value;
+          const taskIndexNotDragging = [...columnNotDragging.children].indexOf(
+            notDraggingTask
+          );
+          taskData[taskIdNotDragging].position = taskIndexNotDragging;
+        });
+
+        const dragging = document.querySelector(".dragging");
+        dragging.classList.remove("dragging");
+        const column = e.target.parentElement;
+        const taskId = dragging.attributes.task_id.value;
+        const taskIndex = [...column.children].indexOf(dragging);
+        taskData[taskId].position = taskIndex;
+        console.log(taskData);
+
+        localStorage.setItem("taskData", JSON.stringify(taskData));
+      }
+
+      function loadTasks() {
+        const tasksDiv = document.getElementById("tasks");
+
+        taskData = JSON.parse(localStorage.getItem("taskData"));
+
+        console.log(taskData);
+        Object.entries(taskData)
+          .sort((a, b) => a[1].position - b[1].position)
+          .forEach(([taskId, task]) => {
+            const newTask = document.createElement("div");
+            newTask.classList.add("task");
+            newTask.setAttribute("draggable", "true");
+            newTask.setAttribute("task_id", taskId);
+
+            const taskText = document.createElement("p");
+            taskText.innerText = task.text;
+
+            // const taskItem = document.createElement("p");
+            // taskItem.innerText = String(task.position);
+
+            const taskCheckbox = document.createElement("input");
+            taskCheckbox.type = "checkbox";
+            taskCheckbox.classList.add("check");
+            taskCheckbox.setAttribute(
+              "onclick",
+              "checkTask(this.parentElement)"
+            );
+            if (task.checked) {
+              taskCheckbox.checked = true;
+              newTask.classList.add("checked");
+            }
+
+            const deleteButton = document.createElement("button");
+            deleteButton.setAttribute(
+              "onclick",
+              "deleteTask(this.parentElement)"
+            );
+            deleteButton.classList.add("delete");
+            deleteButton.innerText = "-";
+
+            // newTask.appendChild(taskItem);
+            newTask.appendChild(taskCheckbox);
+            newTask.appendChild(taskText);
+            newTask.appendChild(deleteButton);
+
+            tasksDiv.appendChild(newTask);
+          });
+      }
+
+      window.addEventListener("load", loadTasks);
+    </script>
+  </body>
+</html>
