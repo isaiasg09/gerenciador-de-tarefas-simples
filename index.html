@@ -172,6 +172,7 @@
     </div>
 
     <script>
+      localStorage.clear();
       let taskData = {};
 
       document
@@ -250,7 +251,7 @@
       function checkTask(task) {
         const taskId = task.attributes.task_id.value;
         const taskObject = taskData[taskId];
-        console.log(taskObject);
+        // console.log(taskObject);
 
         if (taskObject.checked) {
           task.classList.remove("checked");
@@ -260,7 +261,7 @@
           taskObject.checked = true;
         }
 
-        console.log(taskData);
+        // console.log(taskData);
         localStorage.setItem("taskData", JSON.stringify(taskData));
         // console.log(localStorage.getItem("taskData"));
       }
@@ -272,7 +273,7 @@
       });
 
       document.addEventListener("dragend", (e) => {
-        console.log(taskData);
+        // console.log(taskData);
         handleDragEnd(e);
       });
 
@@ -321,7 +322,7 @@
         const taskId = dragging.attributes.task_id.value;
         const taskIndex = [...column.children].indexOf(dragging);
         taskData[taskId].position = taskIndex;
-        console.log(taskData);
+        // console.log(taskData);
 
         localStorage.setItem("taskData", JSON.stringify(taskData));
       }
@@ -329,50 +330,51 @@
       function loadTasks() {
         const tasksDiv = document.getElementById("tasks");
 
-        taskData = JSON.parse(localStorage.getItem("taskData"));
+        if (JSON.parse(localStorage.getItem("taskData"))) {
+          taskData = JSON.parse(localStorage.getItem("taskData"));
+          // console.log(taskData);
+          Object.entries(taskData)
+            .sort((a, b) => a[1].position - b[1].position)
+            .forEach(([taskId, task]) => {
+              const newTask = document.createElement("div");
+              newTask.classList.add("task");
+              newTask.setAttribute("draggable", "true");
+              newTask.setAttribute("task_id", taskId);
 
-        console.log(taskData);
-        Object.entries(taskData)
-          .sort((a, b) => a[1].position - b[1].position)
-          .forEach(([taskId, task]) => {
-            const newTask = document.createElement("div");
-            newTask.classList.add("task");
-            newTask.setAttribute("draggable", "true");
-            newTask.setAttribute("task_id", taskId);
+              const taskText = document.createElement("p");
+              taskText.innerText = task.text;
 
-            const taskText = document.createElement("p");
-            taskText.innerText = task.text;
+              // const taskItem = document.createElement("p");
+              // taskItem.innerText = String(task.position);
 
-            // const taskItem = document.createElement("p");
-            // taskItem.innerText = String(task.position);
+              const taskCheckbox = document.createElement("input");
+              taskCheckbox.type = "checkbox";
+              taskCheckbox.classList.add("check");
+              taskCheckbox.setAttribute(
+                "onclick",
+                "checkTask(this.parentElement)"
+              );
+              if (task.checked) {
+                taskCheckbox.checked = true;
+                newTask.classList.add("checked");
+              }
 
-            const taskCheckbox = document.createElement("input");
-            taskCheckbox.type = "checkbox";
-            taskCheckbox.classList.add("check");
-            taskCheckbox.setAttribute(
-              "onclick",
-              "checkTask(this.parentElement)"
-            );
-            if (task.checked) {
-              taskCheckbox.checked = true;
-              newTask.classList.add("checked");
-            }
+              const deleteButton = document.createElement("button");
+              deleteButton.setAttribute(
+                "onclick",
+                "deleteTask(this.parentElement)"
+              );
+              deleteButton.classList.add("delete");
+              deleteButton.innerText = "-";
 
-            const deleteButton = document.createElement("button");
-            deleteButton.setAttribute(
-              "onclick",
-              "deleteTask(this.parentElement)"
-            );
-            deleteButton.classList.add("delete");
-            deleteButton.innerText = "-";
+              // newTask.appendChild(taskItem);
+              newTask.appendChild(taskCheckbox);
+              newTask.appendChild(taskText);
+              newTask.appendChild(deleteButton);
 
-            // newTask.appendChild(taskItem);
-            newTask.appendChild(taskCheckbox);
-            newTask.appendChild(taskText);
-            newTask.appendChild(deleteButton);
-
-            tasksDiv.appendChild(newTask);
-          });
+              tasksDiv.appendChild(newTask);
+            });
+        }
       }
 
       window.addEventListener("load", loadTasks);
